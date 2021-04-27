@@ -1,0 +1,91 @@
+* xy_structured_bath to-do
+
+** TODO [2/5] Things still to implement
+    
+    1) [X] Implement a Block_Matrix to sparse method
+
+*** DONE [4/4] Rewrite using Block_Matrix
+
+    1) [X] Calculate eigenoperators in 'New_eigenoperators'
+       + [X] Matrix elements of sigmam_i
+       + [X] Loop over matrix elements 
+       + [X] Change eig_en to be a list of vectors
+
+    2) [X] New function to convert (N C r) x (N C k)
+       matrix to full 2^N x 2^N
+       1) [X] Pre-calculate N_C_k and N_C_k_cummulative
+
+    3) [X] Convert all e_ops into sparse matrices
+       - [X] And into quantum objects in the tensor basis
+
+    4) [X] Figure out why not reducing to Lindblad form
+       - Think I am mixing ith site with jth site... I was!
+
+*** TODO [80%] Implement perturbation theory in the code
+
+    1. [X] LaTeX Code for perturbative correction
+    2. [X] Calculate the matrices for perturbative corrections to the
+       master equation.
+    3. [X] Flag to turn on/off perturbative effect
+       * Would be good to be able to call:
+	 python main.py N omega omega0 b -p lambda
+    4. [X] Utilise the corrections to calculate the new eigenoperators
+       1) [X] Calculate matrix elements as in mstr_pert.tex
+	  - Need to think about the indexing of the PP and MM lists
+            since in my analytical expressions I've indexed them with
+            m-2, m+2. This makes it a bit ambiguous which elements of
+            the list in numerics I'm actually using...
+       2) [X] /IMPORTANT/: I need to really concentrate on the
+          indexing, since I'm getting "list index out of range" errors.
+       3) -- ALL OF THIS WAS RESOLVED QUITE EASILY BY ZIPPING TOGETHER
+          DATA INSTEAD OF LOOPING OVER IT IN ANNOYING WAYS --
+
+*** TODO [/] Implement the 'unperturbed dissipator/perturbed unitary' evolution
+    
+    * In the purely unperturbed case and fully perturbed case, we do
+      not need to ever construct the perturbation Hamiltonian in its
+      full form. 
+
+*** TODO [0/0] Debugging code
+
+    * There is generally a problem with the calculation in that the
+      calculated liovillian does not seem to reduce to Lindblad form
+      in the case where Lambda = 0.0 and b -> infinity.
+      
+    * [0/0] I think the reason it is not returning to Lindblad for is for
+      the same reason it wasn't a few months ago: I am mixing nth
+      and mth sites with every other. I really want to only perform
+      double sums over eigenoperators within one site.
+      - [0/4] To fix:
+	1) [ ] Change pert_eigenoperators to return a list of lists,
+           where each inner list is representative of each site alone.
+
+	2) [ ] Do an itertools.product on each site
+
+	3) [ ] Each site itertools.product into no_of_cores lists
+
+	4) [ ] Pass this to the master equation function
+      
+*** TODO [/] Scripting to get results
+
+    * I have a script which can evaluate each of the situations for
+      the check of duality (±g, {±omega0, 0}). 
+
+*** DONE [0/0] Think about degenerate perturbation theory
+    
+    * It seems that for special values of g (e.g.: g = 0, g = 1/4),
+      the sectors seperated by a spin value of 2 share degenerate
+      eigenvalues, causing the corrections to be infinite, which is a
+      problem. This will require looking into degenerate perturbation
+      theory; one needs to rotate into a basis where the matrix
+      elements of the perturbation on the degenerate eigenstates goes
+      to zero.
+    * [AFTER-MEETING UPDATE] Indeed, this is a difficult
+      problem. Doing degenerate perturbation theory is not necessarily
+      enough. It could be that pairs and even triples, quads,... of
+      energies are degenerate. This means that at values of g where
+      this happens, the radius of convergence of the perturbation
+      series vanishes.
+    * Will think about this problem later, since I can push forward to
+      implement the eigenoperators now and correct for degeneracies
+      later.

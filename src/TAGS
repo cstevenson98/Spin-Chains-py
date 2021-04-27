@@ -1,0 +1,71 @@
+
+block_matrices.py,335
+def fact(4,46
+def bin(8,105
+class Block_Matrix:Block_Matrix27,894
+    def __init__(35,1119
+    def __str__(75,2767
+    def __repr__(90,3203
+    def __add__(107,3748
+    def __radd__(126,4261
+    def __sub__(137,4582
+    def __rmul__(152,4963
+    def __mul__(170,5534
+    def transpose(232,7622
+    def to_sparse(244,7990
+
+checks.py,131
+def binary_str(18,273
+def num_of_ones(21,348
+def config_basis(30,519
+def init(74,1617
+def expec(80,1710
+def dm_shape(86,1807
+
+hamiltonian.py,38
+def HXY(13,274
+def HXY_block(34,769
+
+main.py,23
+def Spec_func(69,1741
+
+master.py,252
+def eigenoperators(25,517
+def master(53,1369
+def pert_eigenoperators(109,3330
+        def zip_and_mult(132,4059
+        def zip_and_add(148,4733
+    def zip_and_contract(212,7342
+    def zip_and_contract_conj(217,7502
+def pert_master(458,17750
+
+perturbation.py,51
+def perturbationV(19,411
+def corrections(38,1042
+
+sendjobs.py,26
+def if_exist_move(21,672
+
+spin_alg.py,211
+def Hop(26,602
+def Kbits(51,1203
+def Down(65,1502
+def S_minus(79,1788
+def S_minus_minus(109,2471
+def S_minus_block(142,3259
+def S_minus_minus_block(147,3367
+def basis_mat(159,3738
+    def delt(176,4147
+
+utils.py,178
+def Nest_flatten(12,181
+def dm_shape(28,499
+def super_shape(36,682
+def block_to_2N(46,927
+def block_visualisation(57,1188
+def restart_line(68,1479
+def loading_bar(72,1550
+
+make_ISS_plots.py,0
+
+duality_checks.py,0

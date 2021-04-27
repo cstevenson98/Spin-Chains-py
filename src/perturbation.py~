@@ -1,0 +1,22 @@
+import itertools
+
+import scipy.sparse as SS
+import scipy.misc as SM
+import numpy as np
+import numpy.linalg as npLA
+
+from qutip import *
+from utils import *
+from hamiltonian import *
+from block_matrices import *
+
+# # FUNCTION: corrections
+
+# DESCRIPTION: Given a set of pertubative operators and the
+#              eigenspectrum (both eigenenergies and eigenstates),
+#              calculate the set of perturbative corrections which go
+#              into the wavefunction.
+
+def corrections(Vset, e_en, e_vec):
+
+    return correct_set

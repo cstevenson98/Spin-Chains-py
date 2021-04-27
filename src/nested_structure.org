@@ -1,0 +1,4 @@
+* The nested structure of the eigenoperator list goes as follows:
+1) Site
+   - Blocks
+     * List of eigenoperators

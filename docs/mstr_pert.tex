@@ -1,0 +1,323 @@
+% A write up of the derivation of a perturbative master equation for
+% the Transverse-field ising model
+\documentclass[a4paper]{memoir}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{minted}
+\newcommand{\bra}[1]{\langle#1|}
+\newcommand{\ket}[1]{|#1\rangle}
+\newcommand{\gap}{\,\,\,\,\,\,\,\,\,\,\,}
+\newcommand{\Choose}[2]{{}^{#1}\hspace{-1pt}C_{#2}}
+
+
+\newcommand{\enn}{\epsilon_{n,i_n}}
+\newcommand{\enm}{\epsilon_{m,i_m}}
+\newcommand{\ennpert}[1]{\epsilon^{(#1)}_{n,i_n}}
+
+
+\newcommand{\enrnought}{\epsilon_{r,i_r}^{(0)}}
+\newcommand{\ennnought}{\epsilon_{n,i_n}^{(0)}}
+\newcommand{\enmnought}{\epsilon_{m,i_m}^{(0)}}
+\newcommand{\enmpnought}{\epsilon_{m+1,i_{m+1}}^{(0)}}
+\newcommand{\enmpppnought}{\epsilon_{m+3,i_{m+3}}^{(0)}}
+\newcommand{\enmmnought}{\epsilon_{m-1,i_{m-1}}^{(0)}}
+
+\newcommand{\anr}{a^{n,i_n}_{r,i_r}}
+\newcommand{\anrnought}{\delta^n_r\delta^{i_n}_{i_r}}
+\newcommand{\anrpert}[1]{a^{n,i_n,(#1)}_{r,i_r}}
+
+\newcommand{\sigpp}{\hat{\Sigma}^{(+2)}}
+\newcommand{\sigmm}{\hat{\Sigma}^{(-2)}}
+
+\newcommand{\bigSig}{\tilde{\mathbf{\Sigma}}^{(l)}_m}
+\newcommand{\bigSigp}{\tilde{\mathbf{\Sigma}}^{(l)}_{m+1}}
+\newcommand{\bigSigpp}{\tilde{\mathbf{\Sigma}}^{(l)}_{m+2}}
+\newcommand{\bigSigmm}{\tilde{\mathbf{\Sigma}}^{(l)}_{m-2}}
+
+%---------------------------------------------------------------------
+
+\setlrmarginsandblock{1.6in}{1.6in}{*}
+\checkandfixthelayout
+
+\begin{document}
+%
+\subsection*{Introduction}
+%
+This document aims to explain the numerical solution of the
+Born-Markov master equation, for a transverse-field $XY$ model, close
+to the $XY$-$XX$ crossover. First is an explanation of the model, the
+eigenstates of the unperturbed case, which have a spin-subspace
+structure which allows for quick exact diagonalisation. Then the
+perturbative corrections are derived, and the numerical algorithm is
+described.
+%
+\subsection*{Hamiltonian}
+%
+The system of interest is a spin-$\frac{1}{2}$ chain of length $N$
+coupled to a set of $N$ independent thermal environments, one for each
+spin. The system is modelled using an (anti-)ferromagnetic
+Hamiltonian, describing nearest-neighbour interactions with hopping
+strength $-J$. There is also an external magnetic field, whose
+magnitude is characterised by a constant $g$. Finally, there is
+pair-creation and annihilation induced by a small pertubative factor
+$\lambda \ll J,g$.
+%
+\par It is of interest to calculate the `eigenoperators' $A(\omega)$
+of this system. This allows for the modelling of the evolution of the
+system under the infulence of the thermal environments, with a
+Born-Markov master equation. This however, requires knowing the
+eigenstates of the system, $\ket{\epsilon}$. Now the Hamiltonian of
+the system will be described.
+%
+\par The spins are modelled using Pauli operators $\sigma^\mu$, $\mu =
+x,y,z,+,-$ and so the system is described by a Hamiltonian
+\begin{align}
+  H&=H_0+\lambda \hat{V}\notag \\
+   &=-J\sum_n(\sigma^+_n\sigma^-_{n+1}+\sigma^-_n\sigma^+_{n+1})+gS^z+
+  \lambda\sum_n(\sigma^+_n\sigma^+_{n+1}+\sigma^-_n\sigma^-_{n+1}),
+\end{align}
+where $S^z = \sum_n \sigma_n^z$. The sum over $n$ takes all values of
+the site label with the inclusion of periodic boundary conditions.
+Since the total $z$-projection spin operator $S^z$ commutes with the
+unperturbed Hamiltonian $[H_0,S^z]=0$, we may order the eigenstates in
+terms of their spin-sector. Let $\ket{\enrnought}$ denote the
+${i_r}^\text{th}$ eigenstate with $r$ up-spins of the unperturbed
+Hamiltonian. Then we have:
+\begin{align}
+  H_0\ket{\enrnought}=\epsilon_{r,i_r}^{(0)}\ket{\enrnought},\gap
+  S^z\ket{\enrnought}=(2r-N)\ket{\enrnought}.
+\end{align}
+% 
+The label $r$ runs from $0$ to $N$, giving a total of $N+1$
+spin-sectors. In each subsector, there are $r$ up-spins distributed on
+a chain of $N$ spins, which gives an $\Choose{N}{r}$-dimensional
+space, where $\Choose{N}{r}$ is the binomial coefficient
+$N!/(N-r)!r!$. Therefore, $i_r$ runs from $1$ to $\Choose{N}{r}$.
+%
+\par Consider the configuration basis, ordered in terms of the total
+$z$-spin projection, which for $N=3$ is
+\begin{align}
+  \ket{000},\ket{100},\ket{010},\ket{001},\ket{110},\ket{101},\ket{011},\ket{111}.
+\end{align}
+Let $\ket{\{\sigma\}}$ denote one such configuration-basis state. Then
+in this basis, $H_0$ takes a block-diagonal form:
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |-3g  |0    |0    |0    |0    |0    |0    |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |-g   |-J   |-J   |0    |0    |0    |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |-J   |-g   |-J   |0    |0    |0    |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |-J   |-J   |-g   |0    |0    |0    |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |0    |0    |0    |g    |-J   |-J   |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |0    |0    |0    |-J   |g    |-J   |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |0    |0    |0    |-J   |-J   |g    |0    |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+%% |0    |0    |0    |0    |0    |0    |0    |3g   |
+%% +-----+-----+-----+-----+-----+-----+-----+-----+
+\begin{align}
+  \bra{\{\sigma\}}H_0\ket{\{\sigma'\}}=\left(
+  \begin{array}{cccccccc}
+    -3g & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+    0 & -g & -J & -J & 0 & 0 & 0 & 0 \\
+    0 & -J & -g & -J & 0 & 0 & 0 & 0 \\
+    0 & -J & -J & -g & 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 & g & -J & -J & 0 \\
+    0 & 0 & 0 & 0 & -J & g & -J & 0 \\
+    0 & 0 & 0 & 0 & -J & -J & g & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0 & 0 & 3g \\
+  \end{array}
+  \right).
+\end{align}
+The eigenvectors of this matrix can be found by diagonalising the four
+sub-blocks of the matrix.
+%
+\subsection*{Perturbation theory}
+%
+Next, the perturbative corrections to the eigenstates of the
+unperturbed Hamiltonian are calculated to give an approximation to the
+full perturbed model.
+\par To begin, we note that the unperturbed eigenstates form a
+complete state and so any state in the system space may be expressed
+as a superposition
+\begin{align}
+  \ket{\psi}=\sum_{r=0}^N\sum_{i_r=1}^{\Choose{N}{r}}a_{r,i_r}\ket{\enrnought},
+\end{align}
+where the $a_{r,i_r}$ are complex numbers. This principle of
+superposition must also apply to the eigenstates of the perturbed
+Hamiltonian too:
+\begin{align}
+  \ket{\enn}=\sum_{r}\sum_{i_r}\anr\ket{\enrnought}.
+\end{align}
+In this expression the symbol $\anr$ is represented as a perturbation
+series
+\begin{align}
+  \anr = \anrnought+\lambda\anrpert{1} + \lambda^2\anrpert{2} +
+  \mathcal{O}(\lambda^3).
+\end{align}
+Similarly the perturbed eigenenergies can be written
+\begin{align}
+  \enn = \ennnought+\lambda\ennpert{1}+\lambda^2\ennpert{2}
+         +\mathcal{O}(\lambda^3).
+\end{align}
+%
+\par Perturbation theory allows the calculation of the terms $\anrpert{m}$
+and $\ennpert{m}$ in terms of the unperturbed eigenenergies and
+unperturbed eigenstates. Without going into the full derivation (which
+is simply a term-by-term equation of the Schr\"odinger equation using
+the perturbation series), the perturbative corrections are found to be,
+at first order:
+\begin{align}
+  \ennpert{1}=\bra{\ennnought}\hat{V}\ket{\ennnought},\gap
+  \anrpert{1}=\frac{\bra{\enrnought}\hat{V}\ket{\ennnought}}
+          {\ennnought-\enrnought}.
+\end{align}
+The remainder of this section will involve rewriting these expressions
+-- particularly the first order correction to the wavefunctions -- in
+terms of the subspace structure, so that a matrix form may be written
+down.
+%
+\subsubsection*{Rewriting perturbative correction}
+%
+Let us first devide up the perturbative term in the Hamiltonian into
+two operators:
+\begin{align}
+  \hat{V} = \sum_n(\sigma^+_n\sigma^+_{n+1}+\sigma^-_n\sigma^-_{n+1})
+          = \sigpp+\sigmm,
+\end{align}
+where we have defined $\sigpp\equiv\sum_n\sigma^+_n\sigma^+_{n+1}$ and
+$\sigmm\equiv\sum_n\sigma^-_n\sigma^-_{n+1}$. Clearly $\sigpp$ will
+take a state lying in the $r$-spin subspace to the $(r+2)$-spin
+subspace and $\sigmm$ will take an $r$-spin state to an $(r-2)$-spin
+state. More precisely:
+\begin{align}
+  \hat{V}\ket{\enrnought}=\sum_{i_{r-2}}^{\Choose{N}{r-2}}c_{i_{r-2}}
+  \ket{\epsilon_{r-2,i_{r-2}}^{(0)}}
+  +\sum_{i_{r+2}}^{\Choose{N}{r+2}}c_{i_{r+2}}
+  \ket{\epsilon_{r+2,i_{r+2}}^{(0)}}.
+\end{align}
+Now, since the unperturbed eigenstates are an orthonormal set, we have
+that
+\begin{align}
+  \langle\epsilon_{n,i_n}^{(0)}\ket{\enrnought}=\delta^n_r\delta_{i_r}^{i_n},
+\end{align}
+which implies immediately that
+$\bra{\ennnought}\hat{V}\ket{\enrnought}=0$ so there is \textit{no}
+energy correction at first order for this perturbation.
+%
+\par Since the perturbation splits into to two terms, we shall deal
+with them independently. We first define the following symbols:
+\begin{align}
+  K_{r,n}^{(i_r,i_n)}=\frac{\bra{\enrnought}\sigmm\ket{\ennnought}}
+                           {\ennnought-\enrnought},\gap
+  M_{r,n}^{(i_r,i_n)}=\frac{\bra{\enrnought}\sigpp\ket{\ennnought}}
+                           {\ennnought-\enrnought}.
+\end{align}
+With these new definitions the perturbative expansion of the
+eigenstates becomes:
+\begin{align}
+  \ket{\enn} = \ket{\ennnought}+\lambda\sum_r\sum_{i_r}
+  \left(K_{r,n}^{(i_r,i_n)}+M_{r,n}^{(i_r,i_n)}\right)\ket{\enrnought}
+  +\mathcal{O}(\lambda^2).
+\end{align}
+We may simplify this by noting that because $\sigmm$ and $\sigpp$
+remove or add 2 spins, the tensor
+$K_{r,n}^{(i_r,i_n)}+M_{r,n}^{(i_r,i_n)}$ has a value of zero if
+$|r-n|>2$. This is encapsulated by the following expressions:
+\begin{align}
+  K_{r,n}^{(i_r,i_n)}=\delta_{r,n-2}K_{n-2,n}^{(i_{n-2},i_n)}\gap
+  M_{r,n}^{(i_r,i_n)}=\delta_{r,n+2}M_{n+2,n}^{(i_{n+2},i_n)}
+\end{align}
+which leads to the introduction of the symbols
+\begin{align}
+  K_{n-2}^{(i,j)}=K_{n-2,n}^{(i_{n-2},j_n)}\gap\text{and}\gap
+  M_{n+2}^{(i,j)}=M_{n+2,n}^{(i_{n+2},j_n)}.
+\end{align}
+The perturbative expansion then takes the form:
+\begin{align}
+  \ket{\enn} = \ket{\ennnought}+\lambda\left(
+  \sum_{i}K_{n-2}^{(i,i_n)}\ket{\epsilon_{n-2,i}^{(0)}}
+  +\sum_{i'}M_{n+2}^{(i',i_n)}\ket{\epsilon_{n+2,i'}^{(0)}}\right)
+  +\mathcal{O}(\lambda^2).
+\end{align}
+%
+\subsection{Evaluating matrix elements of $\sigma_l^-$}
+%
+It is required that the matrix element
+$\bra{\enm}\sigma_l^-\ket{\enn}$ be calculated so that the terms in
+the master equation can be evaluated numerically. The first step is to
+use the pertubative expansion of the eigenstates to express the matrix
+element to first order. To this end, we shall ignore the cross terms
+which give order $\lambda^2$ or higher.
+\begin{align}
+  \bra{\enm}\sigma_l^-\ket{\enn} &= \left[\bra{\enmnought} + \lambda
+    \left( \sum_{i}{K_{m-2}^{(i,i_m)}}^* \bra{\epsilon_{m-2,i}^{(0)}}
+    +\sum_{i'}{M_{m+2}^{(i',i_m)}}^* \bra{\epsilon_{m+2,i'}^{(0)}}
+    \right)\right]\notag \\ &\times\sigma_l^-\left[\ket{\ennnought} +
+    \lambda \left( \sum_{i}K_{n-2}^{(i,i_n)}
+    \ket{\epsilon_{n-2,i}^{(0)}} +\sum_{i'}M_{n+2}^{(i',i_n)}
+    \ket{\epsilon_{n+2,i'}^{(0)}} \right)\right] \notag \\
+\end{align}
+This equation is first expanded, then the order $\lambda^2$ terms are thrown away. What results is the expression:
+\begin{align}
+  &\bra{\enmnought}\sigma_l^-\ket{\ennnought}+
+  \lambda\bra{\enmnought}\sigma_l^-\left( \sum_{i}K_{n-2}^{(i,i_n)}
+  \ket{\epsilon_{n-2,i}^{(0)}} +\sum_{i'}M_{n+2}^{(i',i_n)}
+  \ket{\epsilon_{n+2,i'}^{(0)}} \right) \notag \\ &\gap + \lambda
+  \left( \sum_{i}{K_{m-2}^{(i,i_m)}}^* \bra{\epsilon_{m-2,i}^{(0)}}
+  +\sum_{i'}{M_{m+2}^{(i',i_m)}}^* \bra{\epsilon_{m+2,i'}^{(0)}}
+  \right)\sigma_l^-\ket{\ennnought},\notag
+\end{align}
+which after a simple rearrangement of the bras and kets yields
+\begin{align}
+\bra{\enm}\sigma_l^-\ket{\enn}&=\bra{\enmnought}\sigma_l^-\ket{\ennnought}+\lambda\bigg(\sum_{i}K_{n-2}^{(i,i_n)}
+  \bra{\enmnought}\sigma_l^-\ket{\epsilon_{n-2,i}^{(0)}}
+  +\sum_{i'}M_{n+2}^{(i',i_n)}
+  \bra{\enmnought}\sigma_l^-\ket{\epsilon_{n+2,i'}^{(0)}}\notag\\ &\gap\,\,\,
+  + \sum_{i}{K_{m-2}^{(i,i_m)}}^*
+  \bra{\epsilon_{m-2,i}^{(0)}}\sigma_l^-\ket{\ennnought}
+  +\sum_{i'}{M_{m+2}^{(i',i_m)}}^*
+  \bra{\epsilon_{m+2,i'}^{(0)}}\sigma_l^-\ket{\ennnought}\bigg). \notag \\
+\end{align}
+This expression can be split into cases, since $\sigma_l^-$ will only
+talk between eigenstates living in subspaces seperated by total spin
+value of $1$. More precisely this is expressed as
+$\bra{\enmnought}\sigma_l^-\ket{\ennnought}=\delta_{n,m+1}\bra{\enmnought}\sigma_l^-\ket{\enmpnought}$. Instead
+of writing multiple Kronecker deltas on one line let us write the
+result as a piecewise expression:
+\begin{align}
+  \bra{\enm}\sigma_l^-\ket{\enn}=
+  \begin{cases}
+    \text{if} \,n=m+1 & \bra{\enmnought}\sigma_l^-\ket{\enmpnought}, \\
+    \text{if} \,n=m-1 & \sum_{i'}M_{m+1}^{(i',i_{m-1})}
+              \bra{\enmnought}\sigma_l^-\ket{\epsilon_{m+1,i'}^{(0)}}
+                      + \sum_{i}{K_{m-2}^{(i,i_m)}}^*
+              \bra{\epsilon_{m-2,i}^{(0)}}\sigma_l^-\ket{\enmmnought}, \\
+    \text{if} \,n=m+3 & \sum_{i}K_{m+1}^{(i,i_{m+3})}
+              \bra{\enmnought}\sigma_l^-\ket{\epsilon_{m+1,i}^{(0)}}
+                      + \sum_{i'}{M_{m+2}^{(i',i_m)}}^*
+              \bra{\epsilon_{m+2,i'}^{(0)}}\sigma_l^-\ket{\enmpppnought}, \\
+    \text{otherwise} & 0.
+  \end{cases}
+\end{align}
+In an attempt to lighten the notation a bit, let the following
+matrices be defined:
+\begin{align}
+  \bigSig=\big[\bra{\enmnought}\sigma_l^-\ket{\enmpnought}\big],\gap
+  \mathbf{K}_r=[K_r^{(i,j)}],\gap\mathbf{M}_r=[M_r^{(i,j)}].
+\end{align}
+Which allows us to write the entries of the piecewise form above in a
+matrix equation, since the sums over $i$ and $i'$ amount to performing
+a matrix multiplication. Then for each pair, $(m,n)$ we construct the
+following matrices:
+\begin{align}
+  \begin{tabular}{lll}
+    \text{when} & $n=r+1$ & $\bigSig$, \\
+    & $n=m-1$ & $\lambda\left[\bigSig\mathbf{M}_{m+1}^\top+\mathbf{K}_{r-2}^*\bigSigmm\right]$, \\
+    & $n=m+3$ & $\lambda\left[\bigSig\mathbf{K}_{m+1}^\top+\mathbf{M}_{r-2}^*\bigSigmm\right]$, \\
+    & otherwise & nothing.
+  \end{tabular}
+\end{align}
+\end{document}
